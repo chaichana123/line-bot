@@ -74,7 +74,7 @@ function mySQL_selectAll($url)
 	$data = "ผลลัพธ์:\r\n";
 		
 	foreach($result_json as $values) {
-		$data .= $values["user_stuid"] . " " . $values["user_firstname"] . " " . $values["user_lastname"] . "\r\n";
+		$data .= $values["stuid"] . " " . $values["firstname"] . " " . $values["lastname"] . "\r\n";
 	}
 	
 	return $data;
