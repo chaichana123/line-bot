@@ -14,11 +14,49 @@ foreach ($request_json['events'] as $event)
 		{
 			$text = $event['message']['text'];
 			
-			$reply_message = 'ฉันได้รับข้อความ '. $text.' ของคุณแล้ว!'; 
+			//$reply_message = 'ฉันได้รับข้อความ '. $text.' ของคุณแล้ว!';   
+			//$reply_message = mySQL_selectAll('http://s61160179.kantit.com/json_select.php');
+			//$reply_message = mySQL_selectAll('http://bot.kantit.com/json_select_users.php');
+			//$reply_message = mySQL_selectAll('http://bot.kantit.com/json_select_users.php?sid='.$text);
+			$arr = explode(" ",$text);
+			if($arr[0] == "@บอท"){
+				
+				$reply_message = "กรุณาใช้รูปแบบคำสั่งที่ถูกต้องงงงง!!\n";
+				
+				$reply_message .= "ฉันมีบริการให้คุณสั่งได้ ดังนี้...\n";
+				
+				$reply_message .= "พิมพ์ว่า \"@บอท ขอรายชื่อนิสิตทั้งหมด\"\n";
+				$reply_message .= "พิมพ์ว่า \" @บอท ฉันต้องการค้นหาข้อมูลนิสิตชื่อ xxx\"\n";
+				$reply_message .= "พิมพ์ว่า \" @บอท ฉันต้องการค้นหาข้อมูลนิสิตนามสกุล xxx\"\n";
+				
+				if($arr[1] == "ขอรายชื่อนิสิตทั้งหมด"){
+					$name = mySQL_selectAll('http://bot.kantit.com/json_select_users.php');
+					foreach($name as $values) {
+						$data .= $values["user_stuid"] . " " . $values["user_firstname"] . " " . $values["user_lastname"] . "\r\n";
+					}
+					$reply_message = $data;
+				}
 			
-			$reply_message = "Chaichana!";  
-			
-			$reply_message = mySQL_selectAll('http://s61160175.kantit.com/json_select.php');
+				if($arr[1] == "ฉันต้องการค้นหาข้อมูลนิสิตนามสกุล"){
+					$name = mySQL_selectAll('http://bot.kantit.com/json_select_users.php');
+					foreach($name as $values) {
+						if($values["user_lastname"] == $arr[2]){
+						$data .= "พบชื่อ". $values["user_firstname"] . " " . $values["user_lastname"] . "\r\n";
+						}
+					}
+					$reply_message = $data;
+				}
+				
+				if($arr[1] == "ฉันต้องการค้นหาข้อมูลนิสิตชื่อ"){
+					$name = mySQL_selectAll('http://bot.kantit.com/json_select_users.php');
+					foreach($name as $values) {
+						if($values["user_firstname"] == 'นาย'.$arr[2]||$values["user_firstname"] == 'นางสาว'.$arr[2]){
+						$data .= "พบชื่อ". $values["user_firstname"] . " " . $values["user_lastname"] . "\r\n";
+						}
+					}
+					$reply_message = $data;
+				}
+			}
 			
 		} else {
 			$reply_message = 'ฉันได้รับ '.$event['message']['type'].' ของคุณแล้ว!';
@@ -28,11 +66,26 @@ foreach ($request_json['events'] as $event)
 	}
 	
 	// reply message
-	$post_header = array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken);
-	$data = ['replyToken' => $event['replyToken'], 'messages' => [['type' => 'text', 'text' => $reply_message]]];
-	$post_body = json_encode($data);
-	$send_result = replyMessage('https://api.line.me/v2/bot/message/reply', $post_header, $post_body);
-	//$send_result = send_reply_message('https://api.line.me/v2/bot/message/reply', $post_header, $post_body);
+	$post_header = array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken);	
+	$data = ['replyToken' => $event['replyToken'], 'messages' => [['type' => 'text', 'text' => $reply_message]]];	
+	$post_body = json_encode($data);	
+	//$send_result = replyMessage('https://api.line.me/v2/bot/message/reply', $post_header, $post_body);
+	$send_result = send_reply_message('https://api.line.me/v2/bot/message/reply', $post_header, $post_body);
+}
+
+function mySQL_selectAll($url)
+{
+	$result = file_get_contents($url);
+	
+	$result_json = json_decode($result, true); //var_dump($result_json);
+	
+	//$data = "ผลลัพธ์:\r\n";
+		
+	//foreach($result_json as $values) {
+	//	$data .= $values["user_stuid"] . " " . $values["user_firstname"] . " " . $values["user_lastname"] . "\r\n";
+	//}
+	
+	return $result_json;
 }
 
 function replyMessage($url, $post_header, $post_body)
@@ -65,18 +118,5 @@ function send_reply_message($url, $post_header, $post_body)
 	
 	return $result;
 }
-function mySQL_selectAll($url)
-{
-	$result = file_get_contents($url);
-	
-	$result_json = json_decode($result, true); //var_dump($result_json);
-	
-	$data = "ผลลัพธ์:\r\n";
-		
-	foreach($result_json as $values) {
-		$data .= $values["stuid"] . " " . $values["fullname"] . "\r\n";
-	}
-	
-	return $data;
-}
+
 ?>
